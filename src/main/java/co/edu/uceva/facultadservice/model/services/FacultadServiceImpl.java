@@ -2,9 +2,11 @@ package co.edu.uceva.facultadservice.model.services;
 
 import co.edu.uceva.facultadservice.model.entities.Facultad;
 import co.edu.uceva.facultadservice.model.repositories.IFacultadRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class FacultadServiceImpl implements IFacultadService {
 
     IFacultadRepository facultadRepository;

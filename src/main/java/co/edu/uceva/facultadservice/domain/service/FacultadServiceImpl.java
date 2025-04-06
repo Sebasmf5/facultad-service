@@ -25,6 +25,7 @@ public class FacultadServiceImpl implements IFacultadService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         facultadRepository.deleteById(id);
     }

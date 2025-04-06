@@ -1,9 +1,7 @@
 package co.edu.uceva.facultadservice.model.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,6 +12,11 @@ public class Facultad {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotEmpty(message = "No puede estar vacío")
+    @Column(nullable = false)
     private Long idDecano;
+    @NotEmpty(message = "No puede estar vacio")
+    @Column(nullable = false)
     private String nombre;
 }

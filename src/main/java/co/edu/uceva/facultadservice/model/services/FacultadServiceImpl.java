@@ -2,7 +2,10 @@ package co.edu.uceva.facultadservice.model.services;
 
 import co.edu.uceva.facultadservice.model.entities.Facultad;
 import co.edu.uceva.facultadservice.model.repositories.IFacultadRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,6 +18,7 @@ public class FacultadServiceImpl implements IFacultadService {
 
 
     @Override
+    @Transactional
     public Facultad save(Facultad facultad) {
         return facultadRepository.save(facultad);
     }
@@ -25,17 +29,26 @@ public class FacultadServiceImpl implements IFacultadService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Facultad findById(Long id) {
         return facultadRepository.findById(id).orElse(null);
     }
 
     @Override
+    @Transactional
     public Facultad update(Facultad facultad) {
         return facultadRepository.save(facultad);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Facultad> findAll() {
         return (List<Facultad>) facultadRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Facultad> findAll(Pageable pageable) {
+        return facultadRepository.findAll(pageable);
     }
 }

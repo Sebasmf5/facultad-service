@@ -1,5 +1,9 @@
 package co.edu.uceva.facultadservice.delivery.rest;
 
+import co.edu.uceva.facultadservice.domain.exception.FacultadNoEncontradaException;
+import co.edu.uceva.facultadservice.domain.exception.NoHayFacultadesException;
+import co.edu.uceva.facultadservice.domain.exception.PaginaSinFacultadesException;
+import co.edu.uceva.facultadservice.domain.exception.ValidationException;
 import co.edu.uceva.facultadservice.domain.model.Facultad;
 import co.edu.uceva.facultadservice.domain.service.IFacultadService;
 import org.springframework.dao.DataAccessException;
@@ -21,35 +25,29 @@ public class FacultadRestController {
     //Declaramos como final el servicio para mejorar la inmutabilidad
     private final IFacultadService facultadService;
 
+    //Constantes para los mensajes de error
     private static final String ERROR = "error";
     private static final String MENSAJE = "mensaje";
     private static final String FACULTAD = "facultad";
     private static final String FACULTADES = "facultades";
 
-    public FacultadRestController(IFacultadService facultadService) {this.facultadService = facultadService;}
+    public FacultadRestController(IFacultadService facultadService) {
+        this.facultadService = facultadService;
+    }
 
     /**
      LISTAR TODOS LAS FACULTADES
      */
     @GetMapping("/facultades")
     public ResponseEntity<Map<String, Object>> getFacultades() {
-        Map<String, Object> response = new HashMap<>();
+        List<Facultad> facultades = facultadService.findAll();
 
-        try{
-            List<Facultad> facultades = facultadService.findAll();
-
-            if (facultades.isEmpty()){
-                response.put(MENSAJE, "La facultad no existe");
-                response.put(FACULTADES, facultades); // para que sea siempre el mismo campo
-                return ResponseEntity.status(HttpStatus.OK).body(response); //200 pero lista vacia
-            }
-            response.put(FACULTADES, facultades);
-            return ResponseEntity.ok(response);
-        }catch (DataAccessException d){
-            response.put(MENSAJE, "Error al consultar la base de datos");
-            response.put(ERROR, d.getMessage().concat(": ").concat(d.getMostSpecificCause().getMessage()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        if (facultades.isEmpty()) {
+            throw new NoHayFacultadesException();
         }
+        Map<String, Object> response = new HashMap<>();
+        response.put(FACULTADES, facultades);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -57,25 +55,13 @@ public class FacultadRestController {
      * */
     @GetMapping("/facultades/page/{page}")
     public ResponseEntity<Object> index(@PathVariable Integer page) {
-        Map<String, Object> response = new HashMap<>();
         Pageable pageable = PageRequest.of(page, 4);
+        Page<Facultad> facultades = facultadService.findAll(pageable);
 
-        try{
-            Page<Facultad> facultades = facultadService.findAll(pageable);
-
-            if (facultades.isEmpty()){
-                response.put(MENSAJE, "No hay facultades en la pagina solicitada.");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
-            return ResponseEntity.ok(facultades);
-        } catch (DataAccessException d) {
-            response.put(MENSAJE, "Error al consultar la base de datos");
-            response.put(ERROR, d.getMessage().concat(": ").concat(d.getMostSpecificCause().getMessage()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }catch (IllegalArgumentException i){
-            response.put(MENSAJE, "Numero de pagina inválido.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        if (facultades.isEmpty()) {
+            throw new PaginaSinFacultadesException(page);
         }
+        return ResponseEntity.ok(facultades);
     }
 
     /**
@@ -83,52 +69,28 @@ public class FacultadRestController {
      **/
     @PostMapping("/facultad")
     public ResponseEntity<Map<String, Object>> save(@RequestBody Facultad facultad, BindingResult result) {
+
+        if (result.hasErrors()) {
+            throw new ValidationException(result);
+        }
         Map<String, Object> response = new HashMap<>();
-
-        if(result.hasErrors()){
-            List<String> errors = result.getFieldErrors()
-                    .stream()
-                    .map(err ->"El campo '" + err.getField() + "' " + err.getDefaultMessage())
-                    .toList();
-            response.put("errors", errors);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
-
-        try{
-            //Guardar la facultad en la base de datos
-            Facultad nuevaFacultad = facultadService.save(facultad);
-
-            response.put(MENSAJE, "La facultad se ha guardado correctamente");
-            response.put(FACULTAD, nuevaFacultad);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        }catch (DataAccessException d){
-            response.put(MENSAJE, "Error al guardar la facultad en la base de datos.");
-            response.put(ERROR, d.getMessage().concat(": ").concat(d.getMostSpecificCause().getMessage()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+        Facultad nuevaFacultad = facultadService.save(facultad);
+        response.put(MENSAJE, "La facultad se ha registrado correctamente");
+        response.put(FACULTAD, nuevaFacultad);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     /**
      * EMIMINAR UNA FACULTAD PASANDO EL OBJETO EN EL CUERPO DE LA PETICIÓN
      **/
     @DeleteMapping("/facultad")
     public ResponseEntity<Map<String, Object>> delete(@RequestBody Long id) {
+
+        facultadService.findById(id).orElseThrow(() -> new FacultadNoEncontradaException(id));
+        facultadService.delete(id);
         Map<String, Object> response = new HashMap<>();
-
-        try {
-            Facultad facultadExistente = facultadService.findById(id);
-            if (facultadExistente == null){
-                response.put(MENSAJE, "La facultad con ID " + id + " no existe en la base de datos.");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
-
-            facultadService.delete(id);
-            response.put(MENSAJE, "La facultad se ha eliminado correctamente");
-            return ResponseEntity.ok(response);
-        }catch (DataAccessException d){
-            response.put(MENSAJE, "Error al eliminar la facultad en la base de datos.");
-            response.put(ERROR, d.getMessage().concat(": ").concat(d.getMostSpecificCause().getMessage()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+        response.put(MENSAJE, "La facultad se ha eliminado correctamente");
+        response.put(FACULTAD, null);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -137,56 +99,33 @@ public class FacultadRestController {
      */
     @PutMapping("/facultad")
     public ResponseEntity<Map<String, Object>> update(@RequestBody Facultad facultad, BindingResult result) {
+
+        if (result.hasErrors()) {
+            throw new ValidationException(result);
+        }
+        facultadService.findById(facultad.getId())
+                .orElseThrow(() -> new FacultadNoEncontradaException(facultad.getId()));
+
         Map<String, Object> response = new HashMap<>();
+        Facultad facultadActualizada = facultadService.update(facultad);
 
-        if(result.hasErrors()){
-            List<String> errors = result.getFieldErrors()
-                    .stream()
-                    .map(err ->"El campo '" + err.getField() + "' " + err.getDefaultMessage())
-                    .toList();
-            response.put("errors", errors);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+        response.put(MENSAJE, "La facultad se ha actualizado correctamente");
+        response.put(FACULTAD, facultadActualizada);
+        return ResponseEntity.ok(response);
 
-        try{
-            //Verificar si existe
-            if (facultadService.findById(facultad.getId()) == null){
-                response.put(MENSAJE, "ERROR: No se pudo editar, la facultad con ID: "+ facultad.getId()+" no existe en la base de datos.");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
-            //Guardar directamente la facultad actualizada en la base de datos
-            Facultad facultadActualizada = facultadService.update(facultad);
-
-            response.put(MENSAJE, "La facultad se ha actualizado correctamente");
-            response.put(FACULTAD, facultadActualizada);
-            return ResponseEntity.ok(response);
-        }catch (DataAccessException d){
-            response.put(MENSAJE,"Error al actualizar la facultad en la base de datos.");
-            response.put(ERROR, d.getMessage().concat(": ").concat(d.getMostSpecificCause().getMessage()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
     }
     /**
      * OBTENER LA FACULTAD POR SU ID
      **/
     @GetMapping("/facultad/{id}")
     public ResponseEntity<Map<String, Object>> findById(@PathVariable("id") Long id) {
+
+        Facultad facultad = facultadService.findById(id).
+                orElseThrow(() -> new FacultadNoEncontradaException(id));
         Map<String, Object> response = new HashMap<>();
+        response.put(MENSAJE, "La facultad se ha obtenido correctamente");
+        response.put(FACULTAD, facultad);
+        return ResponseEntity.ok(response);
 
-        try{
-            Facultad facultad = facultadService.findById(id);
-
-            if (facultad == null){
-                response.put(MENSAJE,"La facultad con ID: " + id + " no existe en la base de datos.");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
-            response.put(MENSAJE, "La facultad ha sido cargada correctamente");
-            response.put(FACULTAD, facultad);
-            return ResponseEntity.ok(response);
-        }catch (DataAccessException d){
-            response.put(MENSAJE, "Error al consultar la facultad en la base de datos.");
-            response.put(ERROR, d.getMessage().concat(": ").concat(d.getMostSpecificCause().getMessage()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FacultadServiceImpl implements IFacultadService {
@@ -30,8 +31,8 @@ public class FacultadServiceImpl implements IFacultadService {
 
     @Override
     @Transactional(readOnly = true)
-    public Facultad findById(Long id) {
-        return facultadRepository.findById(id).orElse(null);
+    public Optional<Facultad> findById(Long id) {
+        return facultadRepository.findById(id);
     }
 
     @Override

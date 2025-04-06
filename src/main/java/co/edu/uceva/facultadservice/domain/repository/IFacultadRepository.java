@@ -1,6 +1,6 @@
-package co.edu.uceva.facultadservice.model.repositories;
+package co.edu.uceva.facultadservice.domain.repository;
 
-import co.edu.uceva.facultadservice.model.entities.Facultad;
+import co.edu.uceva.facultadservice.domain.model.Facultad;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**

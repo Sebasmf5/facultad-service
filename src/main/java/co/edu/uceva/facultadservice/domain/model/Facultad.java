@@ -1,4 +1,4 @@
-package co.edu.uceva.facultadservice.model.entities;
+package co.edu.uceva.facultadservice.domain.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;

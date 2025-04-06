@@ -1,6 +1,6 @@
-package co.edu.uceva.facultadservice.model.services;
+package co.edu.uceva.facultadservice.domain.service;
 
-import co.edu.uceva.facultadservice.model.entities.Facultad;
+import co.edu.uceva.facultadservice.domain.model.Facultad;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.List;

@@ -1,8 +1,7 @@
-package co.edu.uceva.facultadservice.controllers;
+package co.edu.uceva.facultadservice.delivery.rest;
 
-import co.edu.uceva.facultadservice.model.entities.Facultad;
-import co.edu.uceva.facultadservice.model.services.IFacultadService;
-import org.springframework.beans.factory.annotation.Autowired;
+import co.edu.uceva.facultadservice.domain.model.Facultad;
+import co.edu.uceva.facultadservice.domain.service.IFacultadService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -10,8 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;

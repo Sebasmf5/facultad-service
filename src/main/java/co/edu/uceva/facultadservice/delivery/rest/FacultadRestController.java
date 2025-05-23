@@ -5,7 +5,9 @@ import co.edu.uceva.facultadservice.domain.exception.NoHayFacultadesException;
 import co.edu.uceva.facultadservice.domain.exception.PaginaSinFacultadesException;
 import co.edu.uceva.facultadservice.domain.exception.ValidationException;
 import co.edu.uceva.facultadservice.domain.model.Facultad;
+import co.edu.uceva.facultadservice.domain.service.DecanoService;
 import co.edu.uceva.facultadservice.domain.service.IFacultadService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +37,8 @@ public class FacultadRestController {
         this.facultadService = facultadService;
     }
 
+    @Autowired
+    private DecanoService decanoService;
     /**
      LISTAR TODOS LAS FACULTADES
      */
@@ -62,6 +66,12 @@ public class FacultadRestController {
             throw new PaginaSinFacultadesException(page);
         }
         return ResponseEntity.ok(facultades);
+    }
+
+    @GetMapping("/decanos")
+    public ResponseEntity<Map<String, Object>> getDecano() {
+        ResponseEntity<Map<String, Object>> decano = decanoService.getDecano();
+        return decano;
     }
 
     /**
@@ -92,6 +102,7 @@ public class FacultadRestController {
         response.put(FACULTAD, null);
         return ResponseEntity.ok(response);
     }
+
 
     /**
      * Actualizar un producto pasando el objeto en el cuerpo de la petición.
